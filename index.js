@@ -362,6 +362,7 @@ function startSelfPing() {
   console.log('[KeepAlive] Self-ping system started (every 10 min)');
 }
 
+startSelfPing();
 
 // ============================================================
 // MEMORY MONITORING
