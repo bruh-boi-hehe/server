@@ -1106,7 +1106,7 @@ process.on('uncaughtException', (err) => {
 
   setTimeout(() => {
     scheduleReconnect();
-  }, isNetworkError ? 5000 : 10000);
+  }, isNetworkError ? 20000);
 });
 
 process.on('unhandledRejection', (reason) => {
