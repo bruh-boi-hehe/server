@@ -497,6 +497,18 @@ function createBot() {
       bot.on('login', () => {
       bot.write('settings', { locale: 'en_US', viewDistance: 2 });
       });
+      // ACTIVE ANTI-AFK: Move every 20 seconds to reset the Aternos Idle Timer
+      setInterval(() => {
+      if (bot && botState.connected) {
+        // Randomly look around slightly
+        const yaw = Math.random() * Math.PI * 2;
+        const pitch = (Math.random() - 0.5) * Math.PI;
+        bot.look(yaw, pitch);
+        
+        // Swing arm to show activity
+        bot.swingArm('right');
+        }
+      }, 20000);
       if (config.discord && config.discord.events && config.discord.events.connect) {
         sendDiscordWebhook(`[+] **Connected** to \`${config.server.ip}\``, 0x4ade80);
       }
