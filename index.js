@@ -497,18 +497,20 @@ function createBot() {
       bot.on('login', () => {
       bot.write('settings', { locale: 'en_US', viewDistance: 2 });
       });
-      // ACTIVE ANTI-AFK: Move every 20 seconds to reset the Aternos Idle Timer
-      setInterval(() => {
-      if (bot && botState.connected) {
-        // Randomly look around slightly
-        const yaw = Math.random() * Math.PI * 2;
-        const pitch = (Math.random() - 0.5) * Math.PI;
-        bot.look(yaw, pitch);
-        
-        // Swing arm to show activity
-        bot.swingArm('right');
+      console.log(`[Bot] [+] Successfully spawned on server! (Version: ${bot.version})`);
+      // 2. ACTIVE ANTI-AFK: Move head and swing arm every 20 seconds
+      // This resets the Aternos "Idle Kick" timer which is usually 20 mins.
+      const afkInterval = setInterval(() => {
+        if (bot && botState.connected) {
+          const yaw = Math.random() * Math.PI * 2;
+          const pitch = (Math.random() - 0.5) * Math.PI;
+          bot.look(yaw, pitch); // Look in a random direction
+          bot.swingArm('right'); // Swing arm
         }
       }, 20000);
+
+      // 3. CLEANUP: Stop the timer if the bot leaves so it doesn't error out
+      bot.once('end', () => clearInterval(afkInterval));
       if (config.discord && config.discord.events && config.discord.events.connect) {
         sendDiscordWebhook(`[+] **Connected** to \`${config.server.ip}\``, 0x4ade80);
       }
