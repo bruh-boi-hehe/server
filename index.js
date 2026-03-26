@@ -12,7 +12,18 @@ const https = require('https');
 // EXPRESS SERVER - Keep Render/Aternos alive
 // ============================================================
 const app = express();
-const PORT = process.env.PORT || 5000;
+// This is the key change. Render uses 10000, not 5000.
+const PORT = process.env.PORT || 10000; 
+
+// This 'server' block handles the "Port in Use" error so your bot doesn't crash on deploy
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[System] Health-check server active on port ${PORT}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`[Warning] Port ${PORT} is busy. The old bot is still closing down.`);
+    console.log(`[System] The bot is still starting in the background...`);
+  }
+});
 
 // Bot state tracking
 let botState = {
