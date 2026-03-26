@@ -498,9 +498,6 @@ function createBot() {
       // 1. HANDSHAKE: Proves to Aternos you are a real player & reduces lag
       bot.write('settings', { locale: 'en_US', viewDistance: 2 });
 
-      // 2. STARVATION FIX: Gives permanent saturation (Needs OP)
-      bot.chat('/effect give @s saturation infinite 1 true');
-
       // 3. ANTI-AFK: Resets Aternos "Idle Kick" timer every 20 seconds
       const afkInterval = setInterval(() => {
         if (bot && botState.connected) {
