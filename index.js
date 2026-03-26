@@ -494,26 +494,41 @@ function createBot() {
       isReconnecting = false;
 
       console.log(`[Bot] [+] Successfully spawned on server! (Version: ${bot.version})`);
-      bot.on('login', () => {
+
+      // 1. HANDSHAKE: Proves to Aternos you are a real player & reduces lag
       bot.write('settings', { locale: 'en_US', viewDistance: 2 });
-      });
-      console.log(`[Bot] [+] Successfully spawned on server! (Version: ${bot.version})`);
-      // 2. ACTIVE ANTI-AFK: Move head and swing arm every 20 seconds
-      // This resets the Aternos "Idle Kick" timer which is usually 20 mins.
+
+      // 2. STARVATION FIX: Gives permanent saturation (Needs OP)
+      bot.chat('/effect give @s saturation infinite 1 true');
+
+      // 3. ANTI-AFK: Resets Aternos "Idle Kick" timer every 20 seconds
       const afkInterval = setInterval(() => {
         if (bot && botState.connected) {
-          const yaw = Math.random() * Math.PI * 2;
-          const pitch = (Math.random() - 0.5) * Math.PI;
-          bot.look(yaw, pitch); // Look in a random direction
-          bot.swingArm('right'); // Swing arm
+          bot.look(Math.random() * Math.PI * 2, (Math.random() - 0.5) * Math.PI);
+          bot.swingArm('right');
         }
       }, 20000);
 
-      // 3. CLEANUP: Stop the timer if the bot leaves so it doesn't error out
-      bot.once('end', () => clearInterval(afkInterval));
+      // 4. 18-HOUR REFRESH: Beats the 20-hour crash by reconnecting while healthy
+      setTimeout(() => {
+        console.log("[System] Scheduled 18-hour refresh starting...");
+        if (bot) bot.quit();
+      }, 18 * 60 * 60 * 1000);
+
+      // 5. CLEANUP: Stops the interval if the bot leaves
+      bot.once('end', () => {
+        clearInterval(afkInterval);
+        botState.connected = false;
+      });
+
       if (config.discord && config.discord.events && config.discord.events.connect) {
-        sendDiscordWebhook(`[+] **Connected** to \`${config.server.ip}\``, 0x4ade80);
+        sendDiscordWebhook(config.discord.webhooks.status, {
+          title: '✅ Bot Connected',
+          description: `${config.name} is now online.`,
+          color: 0x2ecc71
+        });
       }
+    });
 
       // FIX: use bot.version (auto-detected) instead of config value so minecraft-data always matches
       const mcData = require('minecraft-data')(bot.version);
