@@ -12,16 +12,17 @@ const https = require('https');
 // EXPRESS SERVER - Keep Render/Aternos alive
 // ============================================================
 const app = express();
-// This is the key change. Render uses 10000, not 5000.
+// Priority 1: Render's port | Priority 2: Port 10000 | Priority 3: Port 5000
 const PORT = process.env.PORT || 10000; 
 
-// This 'server' block handles the "Port in Use" error so your bot doesn't crash on deploy
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[System] Health-check server active on port ${PORT}`);
+  console.log(`[System] Health-check server is live on port ${PORT}`);
 }).on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.log(`[Warning] Port ${PORT} is busy. The old bot is still closing down.`);
-    console.log(`[System] The bot is still starting in the background...`);
+    console.log(`[Warning] Port ${PORT} is busy! This usually means the old bot is still closing.`);
+    console.log(`[System] IGNORED PORT ERROR: Starting the Minecraft bot anyway...`);
+  } else {
+    console.error(`[Fatal] Server Error: ${err.message}`);
   }
 });
 
