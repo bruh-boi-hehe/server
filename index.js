@@ -1129,11 +1129,14 @@ process.on('unhandledRejection', (reason) => {
 });
 
 process.on('SIGTERM', () => {
-  console.log('[System] SIGTERM received — ignoring, bot will stay alive.');
+  console.log('[System] Render is cycling the server. Closing bot for clean restart...');
+  if (bot) bot.quit();
+  setTimeout(() => process.exit(0), 500);
 });
 
 process.on('SIGINT', () => {
-  console.log('[System] SIGINT received — ignoring, bot will stay alive.');
+  if (bot) bot.quit();
+  setTimeout(() => process.exit(0), 500);
 });
 
 // ============================================================
