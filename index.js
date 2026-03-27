@@ -12,24 +12,7 @@ const https = require('https');
 // EXPRESS SERVER - Keep Render/Aternos alive
 // ============================================================
 const app = express();
-// Default to 5000 as requested
-const PORT = 5000; 
-
-// This 'server' constant allows us to attach the error handler
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[System] Web Dashboard is live on port ${PORT}`);
-}).on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    // This is the "Magic" fix:
-    // It catches the error so the script doesn't crash, 
-    // allowing the Minecraft bot below it to still start up.
-    console.log(`[Warning] Port ${PORT} is busy (old bot hasn't closed yet).`);
-    console.log(`[System] IGNORING PORT ERROR: Starting the Minecraft bot anyway...`);
-  } else {
-    // If it's a different error, log it
-    console.error(`[Fatal] Server Error: ${err.message}`);
-  }
-});
+const PORT = process.env.PORT || 5000;
 
 // Bot state tracking
 let botState = {
@@ -511,38 +494,14 @@ function createBot() {
       isReconnecting = false;
 
       console.log(`[Bot] [+] Successfully spawned on server! (Version: ${bot.version})`);
-
-      // 1. HANDSHAKE: Proves to Aternos you are a real player & reduces lag
+      bot.on('login', () => {
       bot.write('settings', { locale: 'en_US', viewDistance: 2 });
-
-      // 3. ANTI-AFK: Resets Aternos "Idle Kick" timer every 20 seconds
-      const afkInterval = setInterval(() => {
-        if (bot && botState.connected) {
-          bot.look(Math.random() * Math.PI * 2, (Math.random() - 0.5) * Math.PI);
-          bot.swingArm('right');
-        }
-      }, 20000);
-
-      // 4. 18-HOUR REFRESH: Beats the 20-hour crash by reconnecting while healthy
-      setTimeout(() => {
-        console.log("[System] Scheduled 18-hour refresh starting...");
-        if (bot) bot.quit();
-      }, 18 * 60 * 60 * 1000);
-
-      // 5. CLEANUP: Stops the interval if the bot leaves
-      bot.once('end', () => {
-        clearInterval(afkInterval);
-        botState.connected = false;
       });
-
-      if (config.discord && config.discord.events && config.discord.events.connect) {
-        sendDiscordWebhook(config.discord.webhooks.status, {
-          title: '✅ Bot Connected',
-          description: `${config.name} is now online.`,
-          color: 0x2ecc71
-        });
+       }
+      }, 20000);
+     if (config.discord && config.discord.events && config.discord.events.connect) {
+        sendDiscordWebhook(`[+] **Connected** to \`${config.server.ip}\``, 0x4ade80);
       }
-    });
 
       // FIX: use bot.version (auto-detected) instead of config value so minecraft-data always matches
       const mcData = require('minecraft-data')(bot.version);
@@ -1158,14 +1117,11 @@ process.on('unhandledRejection', (reason) => {
 });
 
 process.on('SIGTERM', () => {
-  console.log('[System] Render is cycling the server. Closing bot for clean restart...');
-  if (bot) bot.quit();
-  setTimeout(() => process.exit(0), 500);
+  console.log('[System] SIGTERM received — ignoring, bot will stay alive.');
 });
 
 process.on('SIGINT', () => {
-  if (bot) bot.quit();
-  setTimeout(() => process.exit(0), 500);
+  console.log('[System] SIGINT received — ignoring, bot will stay alive.');
 });
 
 // ============================================================
